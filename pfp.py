@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 HEADERS = {
-    "User-Agent": "RobloxProfileChecker/1.0"
+    "User-Agent": "roblox_pfp_checker/1.0"
 }
 
 def get_user_id(username_or_id):
