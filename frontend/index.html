@@ -3,33 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>group finder</title>
+  <title>Roblox Group Checker</title>
   <style>
-    body {
+    html, body {
+      margin: 0; 
+      padding: 0;
+      height: 100%;
       background-color: black;
       color: white;
       font-family: Arial, sans-serif;
-      padding: 20px;
-      margin: 0;
-      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
     }
-    h2 {
+
+    body > div {
+      width: 100%;
+      max-width: 600px;
       text-align: center;
+    }
+
+    h2 {
       margin-bottom: 20px;
     }
+
     #userInput {
-      display: block;
-      margin: 0 auto 10px auto;
       padding: 10px;
-      width: 250px;
+      width: 80%;
+      max-width: 300px;
       font-size: 16px;
       border-radius: 5px;
       border: none;
       outline: none;
+      margin-bottom: 10px;
     }
+
     #fetchBtn {
-      display: block;
-      margin: 0 auto 20px auto;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -38,16 +48,34 @@
       border: 1px solid #555;
       border-radius: 5px;
       transition: background-color 0.3s ease;
+      margin-bottom: 20px;
     }
+
     #fetchBtn:hover {
       background-color: #444;
     }
+
+    #errorMsg {
+      color: #f55;
+      font-weight: bold;
+      min-height: 24px;
+      margin-bottom: 20px;
+    }
+
     #groupsContainer {
       display: flex;
       flex-wrap: wrap;
       gap: 15px;
       justify-content: center;
+
+      opacity: 0;               /* start invisible */
+      transition: opacity 1s ease;
     }
+
+    #groupsContainer.visible {
+      opacity: 1;               /* fade in */
+    }
+
     .groupBox {
       background: #222;
       border: 1px solid #555;
@@ -61,6 +89,7 @@
       height: 120px;
       color: white;
     }
+
     .groupBox h3 {
       margin: 0;
       text-align: center;
@@ -70,27 +99,25 @@
       align-items: center;
       justify-content: center;
     }
+
     .owner {
       text-align: center;
       font-size: 0.9em;
       color: #ccc;
       margin-top: 10px;
     }
-    #errorMsg {
-      text-align: center;
-      color: #f55;
-      margin-top: 15px;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
-  <h2>Roblox Group Checker</h2>
-  <input type="text" id="userInput" placeholder="Enter username or user ID" />
-  <button id="fetchBtn">Get Groups</button>
+  <div>
+    <h2>Roblox Group Checker</h2>
+    <input type="text" id="userInput" placeholder="Enter username or user ID" />
+    <br />
+    <button id="fetchBtn">Get Groups</button>
 
-  <div id="errorMsg"></div>
-  <div id="groupsContainer"></div>
+    <div id="errorMsg"></div>
+    <div id="groupsContainer"></div>
+  </div>
 
   <script>
     async function fetchGroups(user) {
@@ -98,9 +125,10 @@
       const container = document.getElementById('groupsContainer');
       errorMsg.textContent = '';
       container.innerHTML = '';
+      container.classList.remove('visible');  // hide groups before fetching
 
       try {
-        // Replace this URL with your actual backend API endpoint
+        // Your real API endpoint here
         const res = await fetch(`/api/groups?user=${encodeURIComponent(user)}`);
 
         if (!res.ok) {
@@ -115,12 +143,12 @@
           return;
         }
 
+        // Create boxes
         data.data.forEach(group => {
           const box = document.createElement('div');
           box.className = 'groupBox';
 
           const groupName = group.group.name || 'Unnamed Group';
-          // If owner info exists, else show Unknown
           const ownerName = group.owner && group.owner.username ? group.owner.username : 'Unknown';
 
           box.innerHTML = `
@@ -129,6 +157,12 @@
           `;
           container.appendChild(box);
         });
+
+        // Wait 2 seconds, then fade in groups
+        setTimeout(() => {
+          container.classList.add('visible');
+        }, 2000);
+
       } catch (e) {
         errorMsg.textContent = 'Error fetching groups. Check your connection.';
       }
@@ -143,12 +177,15 @@
       fetchGroups(user);
     });
 
-    // Optionally, submit on Enter key press
     document.getElementById('userInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') {
         document.getElementById('fetchBtn').click();
       }
     });
+  </script>
+</body>
+</html>
+
   </script>
 </body>
 </html>
