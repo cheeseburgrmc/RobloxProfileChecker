@@ -5,161 +5,280 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Roblox Group Checker</title>
 <style>
-  body, html {
+  html, body {
     margin: 0; padding: 0; height: 100%;
-    background-color: black;
+    background: black;
     color: white;
     font-family: Arial, sans-serif;
-  }
-  .container {
-    min-height: 100vh;
     display: flex;
-    flex-direction: column;
-    justify-content: center; /* vertical center */
-    align-items: center;     /* horizontal center */
-    gap: 20px;
-    padding: 20px;
-  }
-  #results {
-    opacity: 0;
-    transition: opacity 1.2s ease-in-out;
-    width: 90%;
-    max-width: 960px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
     justify-content: center;
-  }
-  #results.visible {
-    opacity: 1;
-  }
-  .groupBox {
-    background: #222;
-    border: 1px solid #555;
-    padding: 15px;
-    width: 280px;
-    border-radius: 8px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    height: 120px;
-    color: white;
+    flex-direction: column;
   }
-  .groupBox h3 {
-    margin: 0 0 5px 0;
+
+  #container {
+    max-width: 600px;
+    width: 90vw;
+    text-align: center;
   }
-  .owner {
-    font-size: 0.9em;
-    opacity: 0.7;
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5em;
+    opacity: 0;
+    transition: opacity 2s ease;
   }
-  a {
-    color: #00aaff;
-    text-decoration: underline;
+
+  #inputSection {
+    margin-bottom: 1.5em;
+    opacity: 0;
+    transition: opacity 2s ease;
   }
-  input, button {
-    padding: 10px;
-    font-size: 1em;
+
+  input[type="text"] {
+    padding: 10px 15px;
+    font-size: 1rem;
+    width: 70%;
+    max-width: 350px;
     border-radius: 5px;
     border: none;
+    outline: none;
   }
+
   button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    font-size: 1rem;
+    border: 2px solid white;
+    background: transparent;
+    color: white;
+    border-radius: 5px;
     cursor: pointer;
-    background-color: #00aaff;
-    color: black;
-    font-weight: bold;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   button:hover {
-    background-color: #0088cc;
+    background: white;
+    color: black;
+  }
+
+  #results {
+    margin-top: 20px;
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .group-box {
+    background: #111;
+    border: 2px solid #555;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  .group-info {
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  .group-name {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+
+  .group-owner {
+    font-size: 0.85rem;
+    margin-top: 5px;
+    color: #aaa;
+  }
+
+  .group-link a {
+    color: #4EA1FF;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .group-link a:hover {
+    text-decoration: underline;
+  }
+
+  #error-message {
+    color: #ff5555;
+    margin-top: 10px;
+    font-weight: bold;
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <input type="text" id="username" placeholder="Enter Roblox username or user ID" />
-    <button id="checkBtn">Check Groups</button>
+
+  <div id="container">
+    <h1 id="title">Roblox Group Checker</h1>
+
+    <div id="inputSection">
+      <input id="userInput" type="text" placeholder="Enter Roblox username or user ID" autocomplete="off" />
+      <button id="checkBtn">Check Groups</button>
+    </div>
+
+    <div id="error-message"></div>
+
     <div id="results"></div>
   </div>
 
 <script>
+  const title = document.getElementById('title');
+  const inputSection = document.getElementById('inputSection');
+  const results = document.getElementById('results');
+  const errorMessage = document.getElementById('error-message');
+  const userInput = document.getElementById('userInput');
+  const checkBtn = document.getElementById('checkBtn');
+
+  // Fade in title and input on page load
+  window.onload = () => {
+    title.style.opacity = '1';
+    setTimeout(() => {
+      inputSection.style.opacity = '1';
+    }, 2000);
+  };
+
+  // Helper to fetch user ID from username or direct ID
   async function getUserId(user) {
     if (/^\d+$/.test(user)) {
-      return parseInt(user);
+      return user; // it's a user ID string of digits
     }
-    const res = await fetch('https://users.roblox.com/v1/usernames/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usernames: [user] }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.data && data.data.length > 0) {
-      return data.data[0].id;
+    try {
+      const res = await fetch('https://users.roblox.com/v1/usernames/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0'
+        },
+        body: JSON.stringify({ usernames: [user] })
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.data && data.data.length > 0) {
+        return data.data[0].id;
+      }
+      return null;
+    } catch {
+      return null;
     }
-    return null;
   }
 
+  // Fetch groups for user ID
   async function getUserGroups(userId) {
-    const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`);
-    if (!res.ok) return null;
-    return await res.json();
+    try {
+      const res = await fetch(`https://groups.roblox.com/v1/users/${userId}/groups/roles`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
   }
 
-  const resultsDiv = document.getElementById('results');
-  const button = document.getElementById('checkBtn');
+  // Clear results and errors
+  function clearMessages() {
+    results.innerHTML = '';
+    results.style.opacity = 0;
+    errorMessage.textContent = '';
+  }
 
-  button.addEventListener('click', async () => {
-    resultsDiv.classList.remove('visible');
-    resultsDiv.innerHTML = 'Loading...';
+  // Show error message
+  function showError(msg) {
+    errorMessage.textContent = msg;
+  }
 
-    const username = document.getElementById('username').value.trim();
-    if (!username) {
-      resultsDiv.innerHTML = 'Please enter a username or user ID.';
-      resultsDiv.classList.add('visible');
+  // Create group box element
+  function createGroupBox(group) {
+    const box = document.createElement('div');
+    box.className = 'group-box';
+
+    const info = document.createElement('div');
+    info.className = 'group-info';
+
+    const name = document.createElement('div');
+    name.className = 'group-name';
+    name.textContent = group.group.name;
+
+    const owner = document.createElement('div');
+    owner.className = 'group-owner';
+    owner.textContent = `Owner: ${group.owner ? group.owner.username : 'Unknown'}`;
+
+    info.appendChild(name);
+    info.appendChild(owner);
+
+    const linkDiv = document.createElement('div');
+    linkDiv.className = 'group-link';
+
+    const link = document.createElement('a');
+    link.href = `https://www.roblox.com/groups/${group.group.id}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = 'View Group';
+
+    linkDiv.appendChild(link);
+
+    box.appendChild(info);
+    box.appendChild(linkDiv);
+
+    return box;
+  }
+
+  // Fade in elements one by one
+  async function fadeInGroups(groupBoxes) {
+    results.style.opacity = '1';
+    for (let box of groupBoxes) {
+      results.appendChild(box);
+      await new Promise(r => setTimeout(r, 200)); // delay 200ms between each box
+      box.style.opacity = '1';
+    }
+  }
+
+  checkBtn.onclick = async () => {
+    clearMessages();
+    const user = userInput.value.trim();
+    if (!user) {
+      showError('Please enter a username or user ID.');
       return;
     }
 
-    const userId = await getUserId(username);
+    showError(''); // clear error
+
+    const userId = await getUserId(user);
     if (!userId) {
-      resultsDiv.innerHTML = 'User does not exist.';
-      resultsDiv.classList.add('visible');
+      showError('User not found.');
       return;
     }
 
     const groupsData = await getUserGroups(userId);
-    if (!groupsData || !groupsData.data || groupsData.data.length === 0) {
-      resultsDiv.innerHTML = 'No groups found or user’s groups are private.';
-      resultsDiv.classList.add('visible');
+    if (!groupsData || !groupsData.data) {
+      showError('Failed to fetch groups or no groups found.');
       return;
     }
 
-    // Clear and create group boxes
-    resultsDiv.innerHTML = '';
-    groupsData.data.forEach(group => {
-      const box = document.createElement('div');
-      box.className = 'groupBox';
+    if (groupsData.data.length === 0) {
+      showError('User is not in any groups.');
+      return;
+    }
 
-      const groupName = group.group.name || 'Unnamed Group';
-      const ownerName = (group.owner && group.owner.username) ? group.owner.username : 'Unknown';
+    const groupBoxes = groupsData.data.map(createGroupBox);
 
-      box.innerHTML = `
-        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-          <h3>${groupName}</h3>
-          <div class="owner">Owner: ${ownerName}</div>
-        </div>
-        <div style="margin-left: 15px; display: flex; align-items: center;">
-          <a href="https://www.roblox.com/groups/${group.group.id}" target="_blank" rel="noopener noreferrer">Visit Group</a>
-        </div>
-      `;
-      resultsDiv.appendChild(box);
-    });
+    await fadeInGroups(groupBoxes);
+  };
 
-    // Delay 2 seconds then fade in results
-    resultsDiv.style.opacity = '0';
-    setTimeout(() => {
-      resultsDiv.classList.add('visible');
-    }, 2000);
+  // Pressing Enter triggers the button click
+  userInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      checkBtn.click();
+    }
   });
 </script>
+
 </body>
 </html>
+
