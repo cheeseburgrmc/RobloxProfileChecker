@@ -1,74 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Roblox Groups</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f0f2f5;
-    padding: 20px;
-  }
-  .group-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  .group-box {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
-    width: 200px;
-    height: 150px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 15px;
-  }
-  .group-name {
-    text-align: center;
-    font-weight: bold;
-    font-size: 18px;
-    flex-grow: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .group-owner {
-    font-size: 12px;
-    color: #555;
-    border-top: 1px solid #ddd;
-    padding-top: 8px;
-    text-align: center;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Roblox Group Checker</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #userInput {
+      display: block;
+      margin: 0 auto 10px auto;
+      padding: 10px;
+      width: 250px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+    #fetchBtn {
+      display: block;
+      margin: 0 auto 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    #fetchBtn:hover {
+      background-color: #444;
+    }
+    #groupsContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+    .groupBox {
+      background: #222;
+      border: 1px solid #555;
+      padding: 15px;
+      width: 280px;
+      border-radius: 8px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 120px;
+      color: white;
+    }
+    .groupBox h3 {
+      margin: 0;
+      text-align: center;
+      font-size: 1.2em;
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .owner {
+      text-align: center;
+      font-size: 0.9em;
+      color: #ccc;
+      margin-top: 10px;
+    }
+    #errorMsg {
+      text-align: center;
+      color: #f55;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
+  <h2>Roblox Group Checker</h2>
+  <input type="text" id="userInput" placeholder="Enter username or user ID" />
+  <button id="fetchBtn">Get Groups</button>
 
-<div class="group-container" id="groups">
-  <!-- Group boxes will be inserted here -->
-</div>
+  <div id="errorMsg"></div>
+  <div id="groupsContainer"></div>
 
-<script>
-  // Example group data (you'll replace this with your actual API data)
-  const groups = [
-    {name: "Cool Group", owner: "Owner123"},
-    {name: "Robloxians", owner: "BuilderJoe"},
-    {name: "Game Devs", owner: "DevMaster"},
-  ];
+  <script>
+    async function fetchGroups(user) {
+      const errorMsg = document.getElementById('errorMsg');
+      const container = document.getElementById('groupsContainer');
+      errorMsg.textContent = '';
+      container.innerHTML = '';
 
-  const container = document.getElementById("groups");
-  groups.forEach(group => {
-    const box = document.createElement("div");
-    box.className = "group-box";
-    box.innerHTML = `
-      <div class="group-name">${group.name}</div>
-      <div class="group-owner">Owner: ${group.owner}</div>
-    `;
-    container.appendChild(box);
-  });
-</script>
+      try {
+        // Replace this URL with your actual backend API endpoint
+        const res = await fetch(`/api/groups?user=${encodeURIComponent(user)}`);
 
+        if (!res.ok) {
+          errorMsg.textContent = 'Failed to fetch groups. Try again.';
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data.data || data.data.length === 0) {
+          errorMsg.textContent = 'No groups found for this user.';
+          return;
+        }
+
+        data.data.forEach(group => {
+          const box = document.createElement('div');
+          box.className = 'groupBox';
+
+          const groupName = group.group.name || 'Unnamed Group';
+          // If owner info exists, else show Unknown
+          const ownerName = group.owner && group.owner.username ? group.owner.username : 'Unknown';
+
+          box.innerHTML = `
+            <h3>${groupName}</h3>
+            <div class="owner">Owner: ${ownerName}</div>
+          `;
+          container.appendChild(box);
+        });
+      } catch (e) {
+        errorMsg.textContent = 'Error fetching groups. Check your connection.';
+      }
+    }
+
+    document.getElementById('fetchBtn').addEventListener('click', () => {
+      const user = document.getElementById('userInput').value.trim();
+      if (user.length === 0) {
+        document.getElementById('errorMsg').textContent = 'Please enter a username or user ID.';
+        return;
+      }
+      fetchGroups(user);
+    });
+
+    // Optionally, submit on Enter key press
+    document.getElementById('userInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        document.getElementById('fetchBtn').click();
+      }
+    });
+  </script>
 </body>
 </html>
